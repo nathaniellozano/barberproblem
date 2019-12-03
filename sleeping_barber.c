@@ -17,8 +17,11 @@ void customer_process();
 
 int main()
 {
+//init to 0
   sem_init(&customers, 0);
+//init to 0
   sem_init(&barber, 0);
+//init to 1
   sem_init(&access_seats, 1);
 
   // Create the customers
@@ -49,13 +52,13 @@ void barber_process()
     // the barber is ready to cut
     printf("Barber is ready to cut.\n");
     sem_signal(&barber);
-    // we don't need the lock on the chairs
+    //grabs a customer
+//signaling from the watiting room
     sem_signal(&access_seats);
     // here the barber is cutting hair
-    printf("Barber is cutting hair");
+    printf("\nBarber is cutting customer hair.\n");
   }
 }
-
 void customer_process(int number)
 {
   // runs in an infinite loop
@@ -78,10 +81,12 @@ void customer_process(int number)
       sem_signal(&access_seats);
       // customer wait if the barber is busy
       sem_wait(&barber);
+printf("[PID %d] Customer %d got haircut.\n",
+	   getpid(), number);
     }
-    // there are no free seats
+    // else for no free seats
     else {
-      // but don't forget to release the seats
+      //release the seats
       sem_signal(&access_seats);
       // customer leaves without haircut
       printf("Customer %d left (no free seats).\n", number);
