@@ -1,0 +1,10 @@
+List of funcitons-
+sem_init(Semaphore *s, int value)-this function will initialize a semaphore with the value set in the code
+sem_close(Semaphore *s)- this function will close the semaphore
+sem_wait(Semaphore *s)- this function will wait for a semaphore
+sem_signal(Semaphore *s)- this function will signal a semaphore
+customer_process(int number)- this function will work on the process the customer exectues, it works the way the project does but structured differently
+barber_process()- thid function will work on the process the barber executes.
+____
+On the terminal it will execute infinitely by pressing enter. 
+All the prompts for each processes will display on the terminal.
