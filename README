@@ -8,3 +8,4 @@ barber_process()- thid function will work on the process the barber executes.
 ____
 On the terminal it will execute infinitely by pressing enter. 
 All the prompts for each processes will display on the terminal.
+The program will keep running if all customers are taken care of . This will show that barber is still on.
