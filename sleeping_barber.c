@@ -79,7 +79,7 @@ void customer_process(int number)
       sem_signal(&access_seats);
       // customer wait if the barber is busy
       sem_wait(&barber);
-	    exit(0);
+	    
     }
     // there are no free seats
     else {
