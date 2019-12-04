@@ -27,7 +27,7 @@ int main()
     if(fork() == 0) {
       printf("Fork!\n");
       customer_process(i);
-	    printf("broke");
+	    //printf("broke");
       exit(0);
     }
   }
@@ -79,6 +79,8 @@ void customer_process(int number)
       sem_signal(&access_seats);
       // customer wait if the barber is busy
       sem_wait(&barber);
+	    printf("Customer %d got a haircut. [PID: %d]\n",
+	     number, getpid());
 	    
     }
     // there are no free seats
