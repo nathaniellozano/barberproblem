@@ -27,6 +27,7 @@ int main()
     if(fork() == 0) {
       printf("Fork!\n");
       customer_process(i);
+	    printf("broke");
       exit(0);
     }
   }
