@@ -52,7 +52,7 @@ void barber_process()
     // we don't need the lock on the chairs
     sem_signal(&access_seats);
     // here the barber is cutting hair
-    printf("Barber is cutting hair");
+    printf("\nBarber is cutting hair\n");
   }
 }
 
@@ -78,6 +78,7 @@ void customer_process(int number)
       sem_signal(&access_seats);
       // customer wait if the barber is busy
       sem_wait(&barber);
+	    exit(0);
     }
     // there are no free seats
     else {
