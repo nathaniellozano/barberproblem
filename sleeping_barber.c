@@ -25,7 +25,7 @@ void RandomWaitTime (int seconds)
     sleep(time);
 }
 //customer function, is the process the customer runs through
-void *Customer (void *number) 
+void *Customer_process (void *number) 
 {
     int id = *(int *)number;
     //creates time for the customer to get to the barber shop
@@ -50,7 +50,7 @@ void *Customer (void *number)
     printf("'Customer %d' exiting the barber shop.\n", id);
 }
 //barber function, is the process the barber will go through
-void *Barber ()
+void *Barber_process ()
 {
     while (!isTaskComplete) 
     {
@@ -114,10 +114,10 @@ int main()
     sem_init(&SleepBarber, 0, 0);
     sem_init(&CustomerWait, 0, 0);
     //uses threads
-    pthread_create(&barberThreadInit, NULL, Barber, NULL);
+    pthread_create(&barberThreadInit, NULL, Barber_process, NULL);
     for (i = 0; i < numberOfCustomers; i++) 
     {
-        pthread_create(&customerThreadInit[i], NULL, Customer, (void *)&Numbers[i]);
+        pthread_create(&customerThreadInit[i], NULL, Customer_process, (void *)&Numbers[i]);
     }
     for (i = 0; i < numberOfCustomers; i++) 
     {
