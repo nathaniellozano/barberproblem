@@ -69,7 +69,7 @@ void *Barber ()
         else 
         {
             // finishes with customers
-            printf("The barber is done with all customers.\n")
+            printf("The barber is done with all customers.\n");
             
         }
         
