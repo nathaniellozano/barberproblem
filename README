@@ -5,4 +5,6 @@ sem_post- this function will signal a semaphore
 customer- this function will work on the process the customer exectues, it works the way the project does but structured differently
 barber- thid function will work on the process the barber executes.
 ____
-On the terminal it will execute until barber is done.
+It will execute until barber is done.
+It only works on visual studio and online compilers/editors.
+It does not work on server.
