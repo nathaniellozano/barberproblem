@@ -1,99 +1,131 @@
+/*
+Not sure if we had too make our own semaphore header so I used the default header.
+I tried making my own but it did not work completely.
+*/
+#include <pthread.h>
+//header for semaphores
+#include <semaphore.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include "sem.h"
-
-Semaphore customers; // 0
-Semaphore barber; // 0
-// mutex
-Semaphore access_seats; // 1
-int number_of_free_seats = 25;
-//int total_number_of_free_seats = 25;
-int total_customers = 5;
-
-// Prototypes
-void barber_process();
-void customer_process();
-
-int main()
+#include <unistd.h>
+//creating all semaphores needed
+sem_t WaitingRoom;
+sem_t BarberChair;
+sem_t SleepBarber;
+sem_t CustomerWait;
+//will be used to check if done with a task
+int isTaskComplete = 0;
+// limites the max amount of customers to be inputed
+#define MAX_NUMBER_CUSTOMERS 25
+// creates random wait time
+void RandomWaitTime (int seconds) 
 {
-//init to 0
-  sem_init(&customers, 0);
-//init to 0
-  sem_init(&barber, 0);
-//init to 1
-  sem_init(&access_seats, 1);
-
-  // Create the customers
-  int i;
-  for (i = 0; i < total_customers; i++) {
-    if(fork() == 0) {
-      printf("Fork!\n");
-      customer_process(i);
-//barber_process();
-      exit(0);
+    int time;
+    time = (int) ( ( drand48() * seconds ) + 1);
+    sleep(time);
+}
+//customer function, is the process the customer runs through
+void *Customer (void *number) 
+{
+    int id = *(int *)number;
+    //creates time for the customer to get to the barber shop
+    printf("'Customer %d' on the way to the barber shop.\n", id);
+    RandomWaitTime(5); 
+    //waits for a seat in the waiting room
+    printf("'Customer %d' entering the barber shop.\n", id);
+    sem_wait(&WaitingRoom);
+    // waits for barber to be ready
+    printf("'Customer %d' in the waiting room.\n", id);
+    sem_wait(&BarberChair);
+    //creates open seat in waiting room
+    sem_post(&WaitingRoom);
+    // waits up the customer
+    printf("'Customer %d' is waking up the barber.\n", id);
+    sem_post(&SleepBarber);
+    //gets a haircut
+    printf("'Customer %d' is getting haircut.\n", id);
+    sem_wait(&CustomerWait);
+    //is done so leaves barber shop
+    sem_post(&BarberChair);
+    printf("'Customer %d' exiting the barber shop.\n", id);
+}
+//barber function, is the process the barber will go through
+void *Barber ()
+{
+    while (!isTaskComplete) 
+    {
+        //barber sleeps 
+        printf("The barber sleeping.\n");
+        sem_wait(&SleepBarber);
+        if (!isTaskComplete)
+        {
+            //barber cuts hair
+            printf("The barber is cutting a customers hair.\n");
+            RandomWaitTime(3);
+            //finishes haircut
+            printf("The barber is done cutting one customer's hair.\n");
+            sem_post(&CustomerWait);
+        }
+        else 
+        {
+            // finishes with customers
+            printf("The barber is done with all customers.\n")
+            
+        }
+        
     }
 
-  }
-
-  barber_process();
-  return 0;
 }
 
-void barber_process()
+int main() 
 {
-  // runs in an infinite loop
-  for (;;) {
-    // tries to acquire a customer
-    printf("Barber is ready for customer.\n");
-    sem_wait(&customers);
-    // modify the number of available seats
-    printf("Barder is trying to access seats\n");
-    sem_wait(&access_seats);
-    // one chair gets free
-    number_of_free_seats++;
-    // the barber is ready to cut
-    printf("Barber is ready to cut.\n");
-    sem_signal(&barber);
-    //grabs a customer
-//signaling from the watiting room
-    sem_signal(&access_seats);
-    // here the barber is cutting hair
+    //initialize variables and threads 
+    int numberOfCustomers;
+    int numberOfChairs;
+    int i;
+    pthread_t barberThreadInit;
+    pthread_t customerThreadInit[MAX_NUMBER_CUSTOMERS];
+    int randomNumberSeed;
+    int Numbers[MAX_NUMBER_CUSTOMERS];
+    printf("\n");
+    //grab the customers, chairs and random seed from user  
+    printf("Input the amount of customers getting a haircut: ");
+    scanf("%d", &numberOfCustomers);
+    if (numberOfCustomers > MAX_NUMBER_CUSTOMERS) 
+    {
+        printf("\nThe maximum number of customers is: %d\n", MAX_NUMBER_CUSTOMERS);
+        printf("Please input a small number. \n\n");
+        exit(-1);
+        
+    }
+    printf("\nInput total amount chairs in waiting room: ");
+    scanf("%d", &numberOfChairs);
+    printf("\nInput a number for random seed: ");
+    scanf("%d", &randomNumberSeed);
+    printf("\n");
+    srand48(randomNumberSeed);
+    for (i = 0; i < MAX_NUMBER_CUSTOMERS; i++) 
+    {
+        Numbers[i] = i;
+    }
+    // initialize semaphores to avoid deadlock
+    sem_init(&WaitingRoom, 0, numberOfChairs);
+    sem_init(&BarberChair, 0, 1);
+    sem_init(&SleepBarber, 0, 0);
+    sem_init(&CustomerWait, 0, 0);
+    //uses threads
+    pthread_create(&barberThreadInit, NULL, Barber, NULL);
+    for (i = 0; i < numberOfCustomers; i++) 
+    {
+        pthread_create(&customerThreadInit[i], NULL, Customer, (void *)&Numbers[i]);
+    }
+    for (i = 0; i < numberOfCustomers; i++) 
+    {
+        pthread_join(customerThreadInit[i],NULL);
+    }
 
-printf("\nBarber is cutting customer hair.\n");
-  }
-}
-void customer_process(int number)
-{
-  // runs in an infinite loop
-  for (;;) {
-    // tries to get access to the chairs
-    printf("[PID %d] Customer %d: Trying to access seat.\n",
-	   getpid(), number);
-    sem_wait(&access_seats);
-    printf("[PID %d] Customer %d: Checking if any free seats.\n",
-	   getpid(), number);
-    // if there are any free seats
-    if (number_of_free_seats > 0) {
-      // sitting down on a chair
-      printf("Customer %d sat down in waiting room. [PID: %d]\n",
-	     number, getpid());
-      number_of_free_seats--;
-      // notifiy the barber, about a customer
-      sem_signal(&customers);
-      // don't need to lock the chairs anymore
-      sem_signal(&access_seats);
-      // customer wait if the barber is busy
-      sem_wait(&barber);
-printf("[PID %d] Customer %d got haircut.\n",
-	   getpid(), number);
-    }
-    // else for no free seats
-    else {
-      //release the seats
-      sem_signal(&access_seats);
-      // customer leaves without haircut
-      printf("Customer %d left (no free seats).\n", number);
-    }
-  }
+    isTaskComplete = 1;
+    sem_post(&SleepBarber);
+    pthread_join(barberThreadInit,NULL);
+    //code done so ends program
 }
